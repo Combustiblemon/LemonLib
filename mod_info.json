@@ -1,0 +1,10 @@
+{
+  "id": "combustiblelemon_lemonlib",
+  "name": "LemonLib",
+  "author": "Combustiblelemon",
+  "utility": "true",
+  "version": "0.1.0",
+  "description": "Shared utility library: shader composition system, render core, and generic math/geometry/ship helpers.",
+  "gameVersion": "0.98a",
+  "jars": ["jars/LemonLib.jar"]
+}

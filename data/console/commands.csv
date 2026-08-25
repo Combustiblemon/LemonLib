@@ -1,0 +1,2 @@
+command,class,tags,syntax,help
+ShaderLayers,org.combustiblelemon.lemonlib.commands.ShaderLayers,core,"ShaderLayers [system] [all | layer1,layer2,...]",Debug: render only the given layers of a composed shader system (e.g. ShaderLayers shield border)
