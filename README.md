@@ -9,13 +9,13 @@ of its own; other mods depend on it.
 
 ## Contents
 
-| Package | What |
-| --- | --- |
+| Package                       | What                                                                                                                                                                                                                        |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `lemonlib.render.composition` | **Shader composition system** — build fragment shaders from composable layer modules, with solo-layer debugging and module-tagged compile errors. Full docs: [docs/shader-composition/](docs/shader-composition/README.md). |
-| `lemonlib.render` | `Shader` interface (render/cleanup contract), `getShaderCode` (cached shader-source loader). |
-| `lemonlib.geometry` | Polygon/segment/point math: `rotatePointByDegrees`, `isPointInPolygon`, `getRandomPointsInPolygon`, perpendicular-intersection helpers, `PolygonSmoothing` (+ `SmoothingMethod`), `normalize`, `getPercentage`. |
-| `lemonlib.ship` | `ShipAPI` helpers: `getShipPolygonInWorld`, `getShipDimensions`, `getLocationInFrontOfShip`, `getVelocityVectorInFacing`, `isShieldFacingShip`. |
-| `lemonlib.commands` | `ShaderLayers` console command (needs the Console Commands mod at runtime; optional). |
+| `lemonlib.render`             | `Shader` interface (render/cleanup contract), `getShaderCode` (cached shader-source loader).                                                                                                                                |
+| `lemonlib.geometry`           | Polygon/segment/point math: `rotatePointByDegrees`, `isPointInPolygon`, `getRandomPointsInPolygon`, perpendicular-intersection helpers, `PolygonSmoothing` (+ `SmoothingMethod`), `normalize`, `getPercentage`.             |
+| `lemonlib.ship`               | `ShipAPI` helpers: `getShipPolygonInWorld`, `getShipDimensions`, `getLocationInFrontOfShip`, `getVelocityVectorInFacing`, `isShieldFacingShip`.                                                                             |
+| `lemonlib.commands`           | `ShaderLayers` console command (needs the Console Commands mod at runtime; optional).                                                                                                                                       |
 
 ## Depending on LemonLib
 

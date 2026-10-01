@@ -144,30 +144,40 @@ glUniform1i(glGetUniformLocation(program, "honeycombEnabled"), if (enabled) 1 el
 ```
 
 Uniform arrays — index in the name, count in a companion int uniform, and convert units at upload
-time if the shader works in a different space (the shield's ripples convert world to screen here):
+time if the shader works in a different space (the shield's plasma hit spots convert ship-local to
+screen here):
 
 ```kotlin
-glUniform1i(glGetUniformLocation(program, "numRipples"), activeRipples.size)
-for (i in activeRipples.indices.take(10)) {
-    val r = activeRipples[i]
-    glUniform2f(
-        glGetUniformLocation(program, "rippleCenters[$i]"),
-        viewport.convertWorldXtoScreenX(r.center.first),
-        viewport.convertWorldYtoScreenY(r.center.second)
+glUniform1i(glGetUniformLocation(program, "plasmaHitCount"), count)
+for (i in 0 until count) {
+    val spot = effect.spots[i]
+    val worldX = ship.location.x + spot.localX * c - spot.localY * s
+    val worldY = ship.location.y + spot.localX * s + spot.localY * c
+    glUniform4f(
+        glGetUniformLocation(program, "plasmaHits[$i]"),
+        viewport.convertWorldXtoScreenX(worldX), viewport.convertWorldYtoScreenY(worldY),
+        spot.radiusFraction * bodyRadiusPx, spot.strength
     )
-    glUniform1f(glGetUniformLocation(program, "rippleRadii[$i]"), r.radius / viewport.viewMult)
 }
 ```
 
+Textures — declare the `sampler2D` in the layer's module only (never in the stub), bind on a
+fixed unit and upload the unit index **every frame** (the program can be rebuilt by `ShaderLayers`,
+and unset samplers default to unit 0); the owner saves/restores the active unit and the bindings of
+every unit the layer touches (the shield's `PlasmaLayer` uses units 0 and 1). Past a non-uniform
+`discard` use `textureLod(…, 0.0)` — derivatives are undefined there.
+
 If the loop in the shader iterates a *fixed-size* array rather than a count, zero-fill the unused
-slots (the shield's polygon `points[]` does this).
+slots. Prefer a count uniform though: a loop with a compile-time constant bound gets fully unrolled
+by the driver, which multiplies compile time (the shield moved its six outline loops from a
+placeholder constant to a `pointCount` uniform for that reason).
 
 ### CPU-side state and `advance`
 
-Layers holding animated state (particle lists, timers) put the data in the class and step it in
-`advance(deltaTime)`. The owner calls `program.advance(dt)` to forward to all layers, or calls a
-layer's own richer method directly when it needs extra parameters (the shield calls
-`rippleLayer.update(dt, speed, viewportScale)` instead of `advance`).
+Layers holding animated state (hit lists, timers) put the data in the class and step it in
+`advance(deltaTime)`. The owner calls `program.advance(dt)` to forward to all layers (the shield
+does this from `updateTime`), or calls a layer's own richer method directly when it needs extra
+parameters.
 
 ## Wiring the layer in
 

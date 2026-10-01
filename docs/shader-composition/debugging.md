@@ -14,7 +14,7 @@ correct interactions among them, because the orchestration code is unchanged.
 
 ```text
 ShaderLayers
-    shield: layers [fill, border, sweep, ripple, honeycomb, debug], enabled: all
+    shield: layers [fill, border, sweep, honeycomb, fortress, plasma, distortion, debug], enabled: all
 
 ShaderLayers shield border
     shield: enabled layers border.
@@ -91,6 +91,7 @@ Original driver log:
 | Compile error: redefinition of uniform | Same uniform declared in two files (module + base, or two modules) | Rule 2: one declaration. Shared uniforms live in `base.frag` only. |
 | Compile error: undeclared identifier `<x>_something` | Module calls a function from a layer *later* in the list, or the layer was removed from the list but its call is still in the orchestration function | Rule 3: reorder the list, or fix `base.frag`. |
 | Compile error: undeclared identifier for a uniform, only when some layer is disabled | A later module reads a uniform declared in the disabled layer's module, and the stub does not re-declare it | Add the declaration to the stub (see the border/sweep exception in [writing-layers.md](writing-layers.md)). |
+| Compile error: undeclared identifier for a uniform, tagged `base.frag (footer)`, only when some layer is disabled | The template's orchestration code reads a layer-owned uniform directly (real case: the shield footer read `debugMode`) | Move the check into the layer's own function (e.g. `if (!debugMode) return false;` inside `debug_check`). The template should only ever *call* layer functions. |
 | Compile error mentioning your stub name in the segment tag | Stub signature drifted from the module's (renamed a function in the module, forgot the stub) | Keep stub signatures identical to the module's. |
 | `RuntimeException: ... missing the // {{LAYER_MODULES}} insertion marker` | Marker deleted or altered in `base.frag` | Restore the exact marker line. |
 | `IllegalArgumentException: Placeholder values must be single-line` at construction | Multi-line placeholder value | Placeholders are for constants (array sizes); keep values single-line. |
