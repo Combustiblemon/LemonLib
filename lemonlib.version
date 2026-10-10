@@ -1,0 +1,18 @@
+{
+    # Version Checker (LunaLib) compares this file with the online master copy below.
+    # The master copy must be the raw file, reachable without a redirect.
+    "masterVersionFile":"https://raw.githubusercontent.com/Combustiblemon/LemonLib/main/lemonlib.version",
+
+    "modName":"LemonLib",
+
+    # Forum thread id (digits before the dot in ...index.php?topic=8181.0); 0 = none yet.
+    "modThreadId":0,
+
+    # major.minor.patch, must match mod_info.json "version".
+    "modVersion":
+    {
+        "major":0,
+        "minor":1,
+        "patch":0
+    }
+}
