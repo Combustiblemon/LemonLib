@@ -19,9 +19,6 @@ sourceSets {
         java {
             srcDirs("src")
         }
-        resources {
-            srcDirs("data")
-        }
     }
 }
 
@@ -82,15 +79,9 @@ tasks.register<Jar>("buildMod") {
         }
     }
 
+    // Code only: Starsector reads data/ and mod_info.json from the mod folder (the classpath is only
+    // its last fallback), so copies in the jar were dead weight (2026-10-10, as Covenant Remnants).
     from(sourceSets.main.get().output)
-
-    // Include mod resources
-    from("data") {
-        into("data")
-    }
-
-    // Include mod_info.json
-    from("mod_info.json")
 
     manifest {
         attributes(
@@ -105,5 +96,44 @@ tasks.register("cleanMod") {
     dependsOn("clean")
     doLast {
         delete("jars")
+    }
+}
+
+// Release packaging (developer rulings 2026-10-10, same shape as Covenant Remnants): what the game
+// needs to run plus the modder docs, inside one "LemonLib/" folder so players unzip it straight into
+// mods/. The single file list for releases; package_mod.bat / package_mod.sh just run packageMod.
+val modFolderName = "LemonLib"
+
+val releaseFiles: CopySpec = copySpec {
+    from(".") {
+        include("mod_info.json")
+        // Version Checker: data/config/version/version_files.csv points at this root file;
+        // shipping the CSV without it makes LunaLib's loadJSON throw at startup.
+        include("*.version")
+        include("data/**")
+        // Not the jars/*.stale-* copies left by locked rebuilds
+        include("jars/LemonLib.jar")
+        // Library docs for modders (README links into docs/)
+        include("README.md", "docs/**")
+    }
+    includeEmptyDirs = false
+}
+
+// Fresh jar + release files in build/mod_package/LemonLib/ (Sync drops files from older runs)
+val stageMod = tasks.register<Sync>("stageMod") {
+    dependsOn("buildMod")
+    into(layout.buildDirectory.dir("mod_package/$modFolderName"))
+    with(releaseFiles)
+}
+
+// "LemonLib.zip" in the project root (git-ignored), holding the staged folder only
+tasks.register<Zip>("packageMod") {
+    archiveFileName.set("$modFolderName.zip")
+    destinationDirectory.set(layout.projectDirectory)
+    from(stageMod) {
+        into(modFolderName)
+    }
+    doLast {
+        println("Mod packaged to ${archiveFile.get().asFile}")
     }
 }

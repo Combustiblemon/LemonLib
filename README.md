@@ -54,11 +54,18 @@ makes IDE language servers lock it, which blocks jar replacement on Windows.
 ## Building
 
 ```text
-gradlew buildMod        -> jars/LemonLib.jar
+gradlew buildMod        -> jars/LemonLib.jar (code only; data/ and mod_info.json stay in the folder)
+gradlew packageMod      -> LemonLib.zip      (or package_mod.bat / package_mod.sh)
 ```
 
-**Build order matters:** build LemonLib before any mod that depends on it — dependent mods compile
-against `jars/LemonLib.jar`. Dependent mods can automate this with a Gradle composite build:
+`packageMod` builds a fresh jar and zips one `LemonLib/` folder that players unzip into `mods/`.
+The folder holds `mod_info.json`, `lemonlib.version`, `jars/LemonLib.jar`, `data/`, this README and
+`docs/`. The file list lives only in `packageMod` (`build.gradle.kts`); the two scripts just call
+it. The files are staged in `build/mod_package/LemonLib/`, and `LemonLib.zip` is git-ignored.
+
+**Build order matters:** build LemonLib before any mod that depends on it, so that the runtime jar is
+current. Dependent mods compile against LemonLib's classes through the composite build below. They
+can let it build the jar automatically:
 
 ```kotlin
 // settings.gradle.kts
