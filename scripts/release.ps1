@@ -26,6 +26,10 @@ $ModName = 'LemonLib'                      # release asset label
 $VersionFileName = 'lemonlib.version'          # Version Checker file (major/minor/patch block)
 $ZipName = 'LemonLib.zip'                   # output of `gradlew packageMod`
 $ReleaseBranch = 'main'                     # the only branch releases are made from
+# Local sibling mods this mod depends on: dependency id in mod_info.json -> folder holding that
+# mod's own mod_info.json. Each release pins the dependency's "version" to that mod's current
+# version (developer 2026-10-12: "always on point"). Empty hashtable = no local dependencies.
+$LocalDependencies = @{}
 
 $ErrorActionPreference = 'Stop'
 
@@ -150,6 +154,21 @@ foreach ($required in @($modInfo, $versionFile, $gradleKts, $changelog)) {
     if (-not (Test-Path $required)) { Fail "missing file: $required" }
 }
 
+# Local dependencies: read each sibling mod's current version now so a missing folder or an
+# unreadable mod_info.json aborts before anything is edited.
+$dependencyVersions = @{}
+foreach ($depId in $LocalDependencies.Keys) {
+    $depInfo = Join-Path (Join-Path $root $LocalDependencies[$depId]) 'mod_info.json'
+    if (-not (Test-Path $depInfo)) {
+        Fail "local dependency '$depId': mod_info.json not found at $depInfo"
+    }
+    $depText = Read-Text $depInfo
+    if ($depText -notmatch '"version":\s*"([^"]+)"') {
+        Fail "local dependency '$depId': could not read the version from $depInfo"
+    }
+    $dependencyVersions[$depId] = $Matches[1]
+}
+
 $modInfoText = Read-Text $modInfo
 if ($modInfoText -notmatch '"version":\s*"(\d+)\.(\d+)\.(\d+)"') {
     Fail "could not read the current version from mod_info.json"
@@ -186,6 +205,41 @@ Write-Host "branch $ReleaseBranch, clean, up to date; gh authenticated; tag $tag
 Step "Bumping version files"
 
 $modInfoText = [regex]::Replace($modInfoText, '"version":\s*"[^"]*"', ('"version": "' + $plain + '"'), 1)
+
+# Dependencies: pin each local sibling mod to its current version. Works on the text of the
+# dependency's { ... } block so formatting and the other entries stay untouched; a missing
+# "version" key is inserted after the "name" line.
+foreach ($depId in $LocalDependencies.Keys) {
+    $depVersion = $dependencyVersions[$depId]
+    $idMatch = [regex]::Match($modInfoText, '"id":\s*"' + [regex]::Escape($depId) + '"')
+    if (-not $idMatch.Success) {
+        Fail "mod_info.json has no dependency entry with id '$depId'"
+    }
+    $blockStart = $modInfoText.LastIndexOf('{', $idMatch.Index)
+    $blockEnd = $modInfoText.IndexOf('}', $idMatch.Index)
+    if ($blockStart -lt 0 -or $blockEnd -lt 0) {
+        Fail "could not find the { } block of dependency '$depId' in mod_info.json"
+    }
+    $block = $modInfoText.Substring($blockStart, $blockEnd - $blockStart + 1)
+    $oldVersion = $null
+    if ($block -match '"version":\s*"([^"]*)"') {
+        $oldVersion = $Matches[1]
+        $newBlock = [regex]::Replace($block, '"version":\s*"[^"]*"', ('"version": "' + $depVersion + '"'), 1)
+    } else {
+        $nameMatch = [regex]::Match($block, '(?m)^([ \t]*)"name":\s*"[^"]*"')
+        if (-not $nameMatch.Success) {
+            Fail "dependency '$depId' in mod_info.json has no ""name"" line to insert the version after"
+        }
+        $indent = $nameMatch.Groups[1].Value
+        $lineEnd = if ($modInfoText.Contains("`r`n")) { "`r`n" } else { "`n" }
+        $insertion = $nameMatch.Value + ',' + $lineEnd + $indent + '"version": "' + $depVersion + '"'
+        $newBlock = $block.Substring(0, $nameMatch.Index) + $insertion + $block.Substring($nameMatch.Index + $nameMatch.Length)
+    }
+    $modInfoText = $modInfoText.Substring(0, $blockStart) + $newBlock + $modInfoText.Substring($blockEnd + 1)
+    $shown = if ($oldVersion) { "$oldVersion -> $depVersion" } else { "(unpinned) -> $depVersion" }
+    Write-Host "dependency ${depId}: $shown"
+}
+
 Write-Text $modInfo $modInfoText
 
 $versionText = Read-Text $versionFile
