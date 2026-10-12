@@ -114,7 +114,7 @@ val releaseFiles: CopySpec = copySpec {
         // Not the jars/*.stale-* copies left by locked rebuilds
         include("jars/LemonLib.jar")
         // Library docs for modders (README links into docs/)
-        include("README.md", "docs/**")
+        include("README.md", "CHANGELOG.md", "docs/**")
     }
     includeEmptyDirs = false
 }

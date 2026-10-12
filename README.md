@@ -13,7 +13,7 @@ of its own; other mods depend on it.
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `lemonlib.render.composition` | **Shader composition system** — build fragment shaders from composable layer modules, with solo-layer debugging and module-tagged compile errors. Full docs: [docs/shader-composition/](docs/shader-composition/README.md). |
 | `lemonlib.render`             | `Shader` interface (render/cleanup contract), `getShaderCode` (cached shader-source loader).                                                                                                                                |
-| `lemonlib.geometry`           | Polygon/segment/point math: `rotatePointByDegrees`, `isPointInPolygon`, `getRandomPointsInPolygon`, perpendicular-intersection helpers, `PolygonSmoothing` (+ `SmoothingMethod`), `CubicCurve2D` (cubic-bezier easing), `normalize`, `getPercentage`.             |
+| `lemonlib.geometry`           | Polygon/segment/point math: `rotatePointByDegrees`, `isPointInPolygon`, `getRandomPointsInPolygon`, perpendicular-intersection helpers, `PolygonSmoothing` (+ `SmoothingMethod`; Laplacian / Taubin smoothing, `catmullRomAdaptive` corner rounding, `offsetAlongNormals`), `CubicCurve2D` (cubic-bezier easing), `normalize`, `getPercentage`.             |
 | `lemonlib.ship`               | `ShipAPI` helpers: `getShipPolygonInWorld`, `getShipDimensions`, `getLocationInFrontOfShip`, `getVelocityVectorInFacing`, `isShieldFacingShip`.                                                                             |
 | `lemonlib.commands`           | `ShaderLayers` console command (needs the Console Commands mod at runtime; optional).                                                                                                                                       |
 
@@ -59,9 +59,18 @@ gradlew packageMod      -> LemonLib.zip      (or package_mod.bat / package_mod.s
 ```
 
 `packageMod` builds a fresh jar and zips one `LemonLib/` folder that players unzip into `mods/`.
-The folder holds `mod_info.json`, `lemonlib.version`, `jars/LemonLib.jar`, `data/`, this README and
-`docs/`. The file list lives only in `packageMod` (`build.gradle.kts`); the two scripts just call
+The folder holds `mod_info.json`, `lemonlib.version`, `jars/LemonLib.jar`, `data/`, this README,
+`CHANGELOG.md` and `docs/`. The file list lives only in `packageMod` (`build.gradle.kts`); the two scripts just call
 it. The files are staged in `build/mod_package/LemonLib/`, and `LemonLib.zip` is git-ignored.
+
+**Releasing:** on a clean `main`, `release.bat vX.Y.Z` (add `-DryRun` to rehearse) bumps
+`mod_info.json`, `lemonlib.version`, `build.gradle.kts` and `gradle.properties`, turns the
+`## Unreleased` section of `CHANGELOG.md` into the new version, runs `packageMod`, commits, tags,
+pushes `main` and creates the GitHub release with `LemonLib.zip` attached. Needs the GitHub CLI
+(`winget install --id GitHub.cli`, then `gh auth login`) once. The script is the same as Covenant
+Remnants' `scripts/release.ps1`; only the config block at its top differs. Changes land under
+`## Unreleased`; the script leaves no empty section behind, so add the heading back with the first
+change after a release.
 
 **Build order matters:** build LemonLib before any mod that depends on it, so that the runtime jar is
 current. Dependent mods compile against LemonLib's classes through the composite build below. They

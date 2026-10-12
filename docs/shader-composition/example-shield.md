@@ -110,8 +110,10 @@ Two conventions worth studying here:
 
 ```text
 ship.exactBounds.origSegments          hull outline, ship-local coords
-  -> PolygonSmoothing.smooth()         Laplacian smoothing, repositions points, count unchanged
-  -> scale (1.05, 1.1)                 shield slightly larger than hull
+  -> PolygonSmoothing.taubin()         Taubin smoothing, repositions points, count and size unchanged
+  -> PolygonSmoothing.catmullRomAdaptive()  corners rounded, points added up to POINT_CAPACITY
+  -> PolygonSmoothing.offsetAlongNormals()  outline pushed outward by ShieldOutline.margin (world units)
+  -> scale (ShieldOutline.scaleX/Y)    defaults 1, 1 (dev tunable via ShieldTune)
   -> translate to ship.location        world space
   -> rotate by ship.facing             world space, oriented
   -> viewport world-to-screen          SCREEN space  <- what the fragment shader receives
