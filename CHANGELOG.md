@@ -2,6 +2,23 @@
 
 All notable changes to LemonLib, newest version first.
 
+## Unreleased
+
+### Breaking changes
+
+- Changed LemonLib to replace LazyLib's bundled Kotlin runtime with its own 2.2.20 runtime for every mod in the install, because Starsector lets the mod that sorts last win duplicate classes. Kotlin mods built against an older runtime keep working.
+- Added `"sortString": "~LemonLib"` to `mod_info.json`, so LemonLib sorts after every other mod and its Kotlin runtime stays first on the classpath whatever other mods are installed. LemonLib now shows last in the launcher's "in order of priority" mod list.
+
+### New features
+
+- Added a bundled Kotlin runtime (`jars/lib/Kotlin-Runtime.jar`: stdlib 2.2.20, reflect, coroutines 1.11.0), so Kotlin mods that depend on LemonLib no longer need LazyLib just to run.
+- Added `getCollisionPoint`, `isPointWithinBounds` and `getSegmentIntersection` to `lemonlib.geometry`, ported from LazyLib's `CollisionUtils`, so mods can test lines and points against a ship's exact bounds without LazyLib.
+- Added `drawCircle` to `lemonlib.render`, which draws a circle outline or disc and is safe to call while a buffer object is still bound.
+
+### Behavioral changes
+
+- Changed `gradlew cleanMod` to keep the bundled runtime in `jars/lib/`, so a clean no longer deletes a tracked file.
+
 ## v0.1.1 — 2026-10-12
 
 ### New features

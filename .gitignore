@@ -1,4 +1,6 @@
 /build
 /.gradle
-/jars
+# Built jar and its locked-rebuild copies stay out; the bundled Kotlin runtime in jars/lib/ is tracked
+/jars/*
+!/jars/lib/
 /LemonLib.zip

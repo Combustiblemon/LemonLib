@@ -1,5 +1,8 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-    kotlin("jvm") version "2.1.0"
+    kotlin("jvm") version "2.2.20"
     java
 }
 
@@ -23,7 +26,10 @@ sourceSets {
 }
 
 dependencies {
-    implementation(kotlin("stdlib"))
+    // Kotlin runtime: the jar LemonLib ships for itself and its dependents (stdlib + reflect +
+    // coroutines). Compile against exactly what runs in game; gradle.properties turns off KGP's
+    // default Maven stdlib.
+    compileOnly(files("jars/lib/Kotlin-Runtime.jar"))
 
     // Starsector API
     compileOnly(files("../../starsector-core/starfarer.api.jar"))
@@ -46,10 +52,11 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = "1.8"
-        freeCompilerArgs += listOf("-Xjvm-default=all")
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_1_8)
+        // Same as the old -Xjvm-default=all: real interface default methods, no DefaultImpls
+        jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
     }
 }
 
@@ -94,8 +101,9 @@ tasks.register<Jar>("buildMod") {
 // Task to clean build artifacts
 tasks.register("cleanMod") {
     dependsOn("clean")
+    // Only the built jar and its locked-rebuild copies: jars/lib/ holds the tracked Kotlin runtime
     doLast {
-        delete("jars")
+        delete(fileTree("jars") { include("LemonLib.jar", "*.stale-*") })
     }
 }
 
@@ -113,6 +121,8 @@ val releaseFiles: CopySpec = copySpec {
         include("data/**")
         // Not the jars/*.stale-* copies left by locked rebuilds
         include("jars/LemonLib.jar")
+        // Bundled Kotlin runtime (listed in mod_info.json). Not the -sources jar: IDE attach only
+        include("jars/lib/Kotlin-Runtime.jar")
         // Library docs for modders (README links into docs/)
         include("README.md", "CHANGELOG.md", "docs/**")
     }
