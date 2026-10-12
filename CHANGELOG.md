@@ -2,7 +2,7 @@
 
 All notable changes to LemonLib, newest version first.
 
-## Unreleased
+## v0.1.1 — 2026-10-12
 
 ### New features
 
