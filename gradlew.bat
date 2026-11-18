@@ -32,6 +32,11 @@ set APP_HOME=%DIRNAME%
 @rem Resolve any "." and ".." in APP_HOME to make it shorter.
 for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
 
+@rem Covenant Remnants / LemonLib: build on Starsector's bundled JRE (Java 17) at <Starsector>\jre
+@rem when this mod sits in <Starsector>\mods\. Gradle 8.4 cannot run on newer JDKs (system Java 25).
+@rem Elsewhere JAVA_HOME / PATH are used as usual. Regenerating the wrapper drops this block.
+if exist "%APP_HOME%\..\..\jre\bin\java.exe" for %%i in ("%APP_HOME%\..\..\jre") do set "JAVA_HOME=%%~fi"
+
 @rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
 

@@ -16,7 +16,9 @@ Vanilla's incompatibility check lives in the hullmod *being installed* (its
 "can not be installed" message must come from the *other* (often vanilla) hullmod's effect — which
 you don't own. `HullModSpecAPI` has no `setEffect()`, so the installer reflectively swaps a
 delegating wrapper into the spec. Refit UI, tooltips, and autofit all call `spec.getEffect()`
-live (verified against 0.98a-RC8), so the wrapper is honored everywhere.
+live, so the wrapper is honored everywhere. This was verified against 0.98a-RC8 and re-checked on
+0.98.5a-RC7 (2026-11-18): the refit mod picker, tooltips, Codex, combat and campaign code all call
+`getEffect()` on the spec, and the 14 Covenant wrappers install with no errors.
 
 ## Usage
 
@@ -96,3 +98,16 @@ bytecode reference to `java.lang.reflect.Field` (e.g. a Kotlin `for` loop typed 
 `clazz.declaredFields`) throws `SecurityException: File access and reflection are not allowed to
 scripts` from the game's script classloader — upcast `getDeclaredFields()` results to
 `Array<out Any>` immediately and touch them only through the MethodHandles.
+
+## Contributor note: forward every default method
+
+`HullmodIncompatibilityWrapper` implements `HullModEffect by wrapped`. Kotlin's `by` delegation does
+not forward Java `default` methods: they fall through to the interface's empty default, and the
+wrapped hullmod silently loses that hook. The wrapper therefore overrides each one by hand:
+
+- `applyEffectsAfterShipCreation2ndPass` (new in 0.98.5a)
+- `applyEffectsAfterShipAddedToCombatEngine`
+- `getRequiredItem`
+
+After every game patch, grep `HullModEffect.java` in `starfarer.api.zip` for `default` and add any
+new method to the wrapper.

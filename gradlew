@@ -83,6 +83,13 @@ done
 APP_BASE_NAME=${0##*/}
 APP_HOME=$( cd "${APP_HOME:-./}" && pwd -P ) || exit
 
+# Covenant Remnants / LemonLib: build on Starsector's bundled JRE (Java 17) at <Starsector>/jre
+# when this mod sits in <Starsector>/mods/. Gradle 8.4 cannot run on newer JDKs (system Java 25).
+# Elsewhere JAVA_HOME / PATH are used as usual. Regenerating the wrapper drops this block.
+if [ -x "$APP_HOME/../../jre/bin/java" ] || [ -x "$APP_HOME/../../jre/bin/java.exe" ]; then
+    JAVA_HOME=$( cd "$APP_HOME/../../jre" && pwd -P ) && export JAVA_HOME
+fi
+
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD=maximum
 

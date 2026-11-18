@@ -1,6 +1,7 @@
 package org.combustiblelemon.lemonlib.hullmods
 
 import com.fs.starfarer.api.Global
+import com.fs.starfarer.api.campaign.CargoStackAPI
 import com.fs.starfarer.api.combat.HullModEffect
 import com.fs.starfarer.api.combat.ShipAPI
 import org.combustiblelemon.lemonlib.reflection.ReflectionUtils
@@ -27,6 +28,18 @@ class HullmodIncompatibilityWrapper(
         blockers.firstOrNull { it.isOn(ship) }?.let { return it.reason }
         return wrapped.getUnapplicableReason(ship)
     }
+
+    // Kotlin's `by` delegation skips Java default methods, so the interface's defaults must be
+    // forwarded by hand or the wrapped hullmod silently loses them. Add any new HullModEffect
+    // default method here.
+
+    override fun applyEffectsAfterShipCreation2ndPass(ship: ShipAPI?, id: String?) =
+        wrapped.applyEffectsAfterShipCreation2ndPass(ship, id)
+
+    override fun applyEffectsAfterShipAddedToCombatEngine(ship: ShipAPI?, id: String?) =
+        wrapped.applyEffectsAfterShipAddedToCombatEngine(ship, id)
+
+    override fun getRequiredItem(): CargoStackAPI? = wrapped.requiredItem
 }
 
 /**

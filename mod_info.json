@@ -6,6 +6,6 @@
   "utility": "true",
   "version": "0.1.2",
   "description": "Shared utility library: shader composition system, render core, and generic math/geometry/ship helpers.",
-  "gameVersion": "0.98a",
+  "gameVersion": "0.98.5a-RC7",
   "jars": ["jars/LemonLib.jar", "jars/lib/Kotlin-Runtime.jar"]
 }

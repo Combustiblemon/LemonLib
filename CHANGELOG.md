@@ -2,6 +2,26 @@
 
 All notable changes to LemonLib, newest version first.
 
+## Unreleased
+
+### Breaking changes
+
+- Changed the bundled Kotlin runtime to `kotlin-stdlib` 2.4.21 (was 2.2.20) with `kotlinx-coroutines-core` 1.11.0, so every mod in the install runs on current Kotlin. Mods built against it need Kotlin Gradle plugin 2.3 to 2.4.21; a 2.2 compiler cannot read 2.4 metadata.
+- Removed `kotlin-reflect` from the bundled runtime, because it is built on the `java.lang.reflect` classes Starsector blocks and no installed mod used it. Use `ReflectionUtils` (MethodHandles) for reflection.
+
+### New features
+
+- Added `scripts/build-kotlin-runtime.py`, which rebuilds `jars/lib/Kotlin-Runtime.jar` and its sources jar from Maven Central for any Kotlin / coroutines version, with SHA1 checks, so a runtime update is one command.
+
+### Behavioral changes
+
+- Changed LemonLib to target Starsector 0.98.5a-RC7, so the launcher no longer flags it as made for another game version.
+- Changed `gradlew` and `gradlew.bat` to build on Starsector's bundled Java 17 (`<Starsector>/jre`) when LemonLib sits in `mods/`, so a newer system Java (21+) no longer breaks the Gradle 8.4 build.
+
+### Bug fixes
+
+- Fixed `HullmodIncompatibilityWrapper` dropping the hullmod hooks that `HullModEffect` declares as Java default methods (`applyEffectsAfterShipCreation2ndPass` from 0.98.5a, `applyEffectsAfterShipAddedToCombatEngine`, `getRequiredItem`), so a wrapped hullmod keeps every effect and its required item.
+
 ## v0.1.2 — 2026-10-17
 
 ### Breaking changes

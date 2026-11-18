@@ -20,13 +20,16 @@ of its own; other mods depend on it.
 ## Kotlin runtime
 
 LemonLib ships the Kotlin runtime its dependents run on: `jars/lib/Kotlin-Runtime.jar`, one jar with
-`kotlin-stdlib` 2.2.20, `kotlin-reflect` and `kotlinx-coroutines` 1.11.0, listed in `mod_info.json`.
-A Kotlin mod that depends on LemonLib does not need LazyLib for the runtime.
+`kotlin-stdlib` 2.4.21 and `kotlinx-coroutines-core` 1.11.0, listed in `mod_info.json`. There is no
+`kotlin-reflect` (see Reflection below). A Kotlin mod that depends on LemonLib does not need LazyLib
+for the runtime.
 
 - **Compile against it, compile-only.** Turn off the Kotlin Gradle plugin's default Maven stdlib
   with `kotlin.stdlib.default.dependency=false` in `gradle.properties`, then add
-  `compileOnly(files("../LemonLib/jars/lib/Kotlin-Runtime.jar"))`. Use Kotlin Gradle plugin 2.2.20
-  or older, so your classes never need a newer stdlib than the one that runs.
+  `compileOnly(files("../LemonLib/jars/lib/Kotlin-Runtime.jar"))`. Use Kotlin Gradle plugin 2.4.21
+  or older, so your classes never need a newer stdlib than the one that runs. A compiler reads stdlib
+  metadata at most one minor version newer than itself, so a 2.2 compiler cannot build against this
+  jar. Kotlin 2.5 also needs Gradle 8.14.4+, while LemonLib's wrapper is Gradle 8.4.
 - **Which copy wins.** Starsector puts every enabled mod's jars into one shared classloader.
   Mods are sorted by `sortString`, falling back to `name`, and their jars are searched in
   **reverse** order. The mod that sorts last therefore wins a duplicate class.
@@ -40,10 +43,16 @@ A Kotlin mod that depends on LemonLib does not need LazyLib for the runtime.
     priority)" order. LemonLib's only data files are merged CSVs, so loading them last changes
     nothing.
 - **Reflection and files.** The game's classloader blocks `java.lang.reflect.Method`/`Field`/
-  `Constructor` and `java.io.File`. Most of `kotlin-reflect` and the `kotlin.io` file helpers
-  therefore throw when used. Plain stdlib, collections and coroutines are fine.
+  `Constructor` and `java.io.File`. `kotlin-reflect` is built on those classes, so it is not bundled.
+  Use `lemonlib.reflection.ReflectionUtils` (MethodHandles) instead. The stdlib's own `::class`,
+  `simpleName` and `qualifiedName` still work without it. The `kotlin.io` file helpers throw.
+  Plain stdlib, collections and coroutines are fine.
 - `jars/lib/Kotlin-Runtime-sources.jar` is for IDE source attachment only. It is not in
   `mod_info.json` and does not ship in the release zip.
+- **Rebuilding the runtime:** `python scripts/build-kotlin-runtime.py --kotlin 2.4.21 --coroutines 1.11.0`
+  downloads both artifacts and their sources from Maven Central and checks each SHA1. It then
+  writes both jars, without `module-info` or multi-release entries. Bump `kotlin("jvm") version` in
+  every dependent build to the same version.
 
 ## Depending on LemonLib
 
@@ -86,6 +95,10 @@ gradlew buildMod        -> jars/LemonLib.jar (code only; data/ and mod_info.json
 gradlew packageMod      -> LemonLib.zip      (or package_mod.bat / package_mod.sh)
 gradlew cleanMod        -> removes build/ and jars/LemonLib.jar; the tracked jars/lib/ runtime stays
 ```
+
+Build JDK: with LemonLib in `<Starsector>/mods/`, `gradlew` / `gradlew.bat` use Starsector's bundled
+JRE at `<Starsector>/jre` (Java 17) automatically. Elsewhere they fall back to `JAVA_HOME` / `PATH`.
+Gradle 8.4 runs on Java 8 to 20 only, so a system Java 21+ cannot run the build.
 
 `packageMod` builds a fresh jar and zips one `LemonLib/` folder that players unzip into `mods/`.
 The folder holds `mod_info.json`, `lemonlib.version`, `jars/LemonLib.jar`, `jars/lib/Kotlin-Runtime.jar`, `data/`, this README,

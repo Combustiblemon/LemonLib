@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.2.20"
+    kotlin("jvm") version "2.4.21"
     java
 }
 
@@ -26,8 +26,9 @@ sourceSets {
 }
 
 dependencies {
-    // Kotlin runtime: the jar LemonLib ships for itself and its dependents (stdlib + reflect +
-    // coroutines). Compile against exactly what runs in game; gradle.properties turns off KGP's
+    // Kotlin runtime: the jar LemonLib ships for itself and its dependents (stdlib 2.4.21 +
+    // coroutines 1.11.0, built by scripts/build-kotlin-runtime.py). Compile against exactly what runs
+    // in game, with the same Kotlin version as the plugin above; gradle.properties turns off KGP's
     // default Maven stdlib.
     compileOnly(files("jars/lib/Kotlin-Runtime.jar"))
 
